@@ -1,4 +1,4 @@
-# qxeq-example-2
+# axeq-example-2
 
 Two React targets for developing and regression-testing the accessibility checker.
 Neither has a build step — React, ReactDOM and Babel come from a CDN, so there is
