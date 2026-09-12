@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fernweh — outdoor essentials</title>
+<style>
+  :root { --ink: #14181d; --muted: #8a939c; --line: #e6e8ea; --accent: #1f6f4a; --sale: #d4707a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); }
+  .bar { background: var(--accent); color: #cfe3d8; text-align: center; padding: 7px; font-size: 13px; }
+  .top { display: flex; align-items: center; gap: 28px; padding: 18px 40px; border-bottom: 1px solid var(--line); }
+  .brand { font-size: 21px; font-weight: 800; letter-spacing: -.5px; }
+  .menu { display: flex; gap: 22px; margin-left: auto; font-size: 14px; }
+  .menu > div { cursor: pointer; padding: 4px 0; }
+  .icons { display: flex; gap: 14px; align-items: center; }
+  .icons button { background: none; border: 0; cursor: pointer; padding: 4px; }
+  .badge { background: var(--accent); color: #fff; border-radius: 10px; font-size: 11px; padding: 1px 6px; margin-left: -8px; }
+  .hero { position: relative; height: 420px; overflow: hidden; }
+  .slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 40px; color: #fff; }
+  .slide h1 { font-size: 44px; margin: 0 0 8px; letter-spacing: -1px; }
+  .slide p { max-width: 420px; margin: 0 0 18px; }
+  .cta { background: #fff; color: var(--ink); padding: 12px 22px; border-radius: 2px; font-weight: 600; display: inline-block; width: fit-content; cursor: pointer; }
+  .dots { position: absolute; bottom: 16px; left: 40px; display: flex; gap: 7px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.45); cursor: pointer; }
+  .dot.on { background: #fff; }
+  .section { padding: 56px 40px; }
+  .section h3 { font-size: 26px; margin: 0 0 4px; letter-spacing: -.5px; }
+  .sub { color: var(--muted); margin: 0 0 26px; font-size: 14px; }
+  .chips { display: flex; gap: 8px; margin-bottom: 26px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line); padding: 6px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+  .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
+  .card { cursor: pointer; }
+  .thumb { aspect-ratio: 4/5; border-radius: 3px; display: flex; align-items: flex-end; padding: 10px; }
+  .flag { background: var(--sale); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 2px; }
+  .name { font-weight: 600; margin: 12px 0 2px; font-size: 15px; }
+  .stars { color: #e0a33a; font-size: 13px; letter-spacing: 1px; }
+  .price { margin-top: 4px; font-size: 15px; }
+  .was { color: var(--muted); text-decoration: line-through; margin-right: 7px; }
+  .now { color: var(--sale); font-weight: 600; }
+  .swatches { display: flex; gap: 6px; margin-top: 9px; }
+  .sw { width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; }
+  .sw.on { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .add { margin-top: 11px; background: var(--ink); color: #fff; padding: 9px; text-align: center; border-radius: 2px; font-size: 14px; cursor: pointer; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; background: #f6f7f5; }
+  .split .pad { padding: 56px 40px; }
+  .news { display: flex; gap: 10px; max-width: 420px; margin-top: 16px; }
+  .news input { flex: 1; padding: 11px 13px; border: 1px solid var(--line); border-radius: 2px; font-size: 14px; }
+  .news .cta { background: var(--ink); color: #fff; }
+  .err { color: var(--sale); font-size: 13px; margin-top: 7px; }
+  .foot { background: var(--ink); color: #9aa3ad; padding: 48px 40px; font-size: 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
+  .foot a { color: #9aa3ad; text-decoration: none; display: block; padding: 3px 0; }
+  .foot strong { color: #fff; display: block; margin-bottom: 10px; font-size: 13px; }
+  .social { display: flex; gap: 12px; margin-top: 14px; }
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.45); }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 370px; background: #fff; padding: 26px; overflow: auto; }
+  .row { display: flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); align-items: center; }
+  .qty { display: flex; align-items: center; gap: 9px; }
+  .qty div { border: 1px solid var(--line); width: 26px; height: 26px; display: grid; place-items: center; cursor: pointer; }
+  .toast { position: fixed; bottom: 22px; left: 22px; background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 3px; font-size: 14px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React
+
+const PRODUCTS = [
+  { id: 'p1', name: 'Alpine Shell Jacket', cat: 'Outerwear', price: 289, was: 340, rating: 4.5, tone: '#3d5a45', colors: ['#3d5a45', '#2b3138', '#8a6f4e'] },
+  { id: 'p2', name: 'Ridge Merino Base Layer', cat: 'Layers', price: 96, was: null, rating: 4, tone: '#7c8a94', colors: ['#7c8a94', '#b8a894'] },
+  { id: 'p3', name: 'Tarn 28L Daypack', cat: 'Packs', price: 154, was: 185, rating: 5, tone: '#8a6f4e', colors: ['#8a6f4e', '#2b3138'] },
+  { id: 'p4', name: 'Fell Insulated Vest', cat: 'Outerwear', price: 175, was: null, rating: 3.5, tone: '#2b3138', colors: ['#2b3138', '#6b7d6f', '#a8624f'] },
+  { id: 'p5', name: 'Scree Trail Cap', cat: 'Accessories', price: 42, was: 55, rating: 4, tone: '#6b7d6f', colors: ['#6b7d6f'] },
+  { id: 'p6', name: 'Cairn Wool Socks', cat: 'Accessories', price: 24, was: null, rating: 4.5, tone: '#b8a894', colors: ['#b8a894', '#2b3138'] },
+]
+
+const SLIDES = [
+  { h: 'Built for the long way round', p: 'Field-tested layers for weather that changes its mind.', bg: 'linear-gradient(120deg,#2f4739,#5c7361)' },
+  { h: 'Autumn collection is here', p: 'Waxed cotton, recycled down, and nothing you have to baby.', bg: 'linear-gradient(120deg,#4a3f35,#8a6f4e)' },
+  { h: 'Free returns for 60 days', p: 'Wear it outside. If it is wrong, send it back.', bg: 'linear-gradient(120deg,#31383f,#6f7a83)' },
+]
+
+/* Auto-advancing hero. No pause control, dots carry no state or name, slide swaps are silent. */
+function Hero() {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setI((n) => (n + 1) % SLIDES.length), 4000)
+    return () => clearInterval(t)
+  }, [])
+  const s = SLIDES[i]
+  return (
+    <div className="hero" data-a11y="carousel-no-pause,carousel-unannounced,dot-no-name">
+      <div className="slide" style={{ background: s.bg }}>
+        <h1>{s.h}</h1>
+        <p>{s.p}</p>
+        <div className="cta" onClick={() => { window.location.hash = "#/collection" }}>Shop the collection</div>
+      </div>
+      <div className="dots">
+        {SLIDES.map((_, n) => (
+          <div key={n} className={'dot' + (n === i ? ' on' : '')} onClick={() => setI(n)} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* Star rating drawn as glyphs, with the numeric value never exposed. */
+function Stars({ value }) {
+  return <div className="stars">{'★★★★★'.slice(0, Math.round(value))}{'☆☆☆☆☆'.slice(0, 5 - Math.round(value))}</div>
+}
+
+/* Product card: the whole tile is a click target, the swatches and add button are nested inside it. */
+function Card({ p, onAdd }) {
+  const [color, setColor] = useState(p.colors[0])
+  return (
+    <div className="card" data-a11y="card-div-onclick,nested-interactive,swatch-no-name,price-context" onClick={() => { window.location.hash = '#/product/' + p.id }}>
+      <div className="thumb" style={{ background: p.tone }}>
+        {p.was && <span className="flag">Sale</span>}
+      </div>
+      <div className="name">{p.name}</div>
+      <Stars value={p.rating} />
+      <div className="price">
+        {p.was && <span className="was">${p.was}</span>}
+        <span className={p.was ? 'now' : ''}>${p.price}</span>
+      </div>
+      <div className="swatches">
+        {p.colors.map((c) => (
+          <div key={c} className={'sw' + (c === color ? ' on' : '')} style={{ background: c }}
+            onClick={(e) => { e.stopPropagation(); setColor(c) }} />
+        ))}
+      </div>
+      <div className="add" onClick={(e) => { e.stopPropagation(); onAdd(p) }}>Add to bag</div>
+    </div>
+  )
+}
+
+/* Category filter. Selection is conveyed by colour alone and the result count never changes politely. */
+function Filters({ cat, setCat }) {
+  const cats = ['All', 'Outerwear', 'Layers', 'Packs', 'Accessories']
+  return (
+    <div className="chips" data-a11y="filter-color-only,filter-no-state,results-unannounced">
+      {cats.map((c) => (
+        <div key={c} className={'chip' + (c === cat ? ' on' : '')} onClick={() => setCat(c)}>{c}</div>
+      ))}
+    </div>
+  )
+}
+
+/* Cart drawer rendered as a plain div: no dialog role, no focus trap, no Escape, no focus return. */
+function CartDrawer({ items, setItems, onClose }) {
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0)
+  return (
+    <div data-a11y="drawer-no-dialog,no-focus-trap,no-focus-restore,no-esc">
+      <div className="scrim" onClick={onClose} />
+      <div className="drawer">
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <span style={{ fontSize: 19, fontWeight: 700 }}>Your bag</span>
+          <button style={{ marginLeft: 'auto', background: 'none', border: 0, fontSize: 20, cursor: 'pointer' }} onClick={onClose}>×</button>
+        </div>
+        {items.length === 0 && <p style={{ color: 'var(--muted)' }}>Nothing in here yet.</p>}
+        {items.map((it) => (
+          <div className="row" key={it.id}>
+            <div style={{ width: 46, height: 56, background: it.tone, borderRadius: 2 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{it.name}</div>
+              <div style={{ fontSize: 13, color: 'var(--muted)' }}>${it.price}</div>
+            </div>
+            <div className="qty">
+              <div onClick={() => setItems(items.map((x) => x.id === it.id ? { ...x, qty: Math.max(1, x.qty - 1) } : x))}>−</div>
+              <span style={{ fontSize: 14 }}>{it.qty}</span>
+              <div onClick={() => setItems(items.map((x) => x.id === it.id ? { ...x, qty: x.qty + 1 } : x))}>+</div>
+            </div>
+            <div onClick={() => setItems(items.filter((x) => x.id !== it.id))} style={{ cursor: 'pointer', color: 'var(--muted)' }}>×</div>
+          </div>
+        ))}
+        <div style={{ display: 'flex', marginTop: 18, fontWeight: 700 }}>
+          <span>Total</span><span style={{ marginLeft: 'auto' }}>${total}</span>
+        </div>
+        <div className="cta" style={{ background: 'var(--ink)', color: '#fff', width: '100%', textAlign: 'center', marginTop: 16 }}>Checkout</div>
+      </div>
+    </div>
+  )
+}
+
+/* Newsletter form: placeholder stands in for a label and the error is never tied to the field. */
+function Newsletter() {
+  const [email, setEmail] = useState('')
+  const [err, setErr] = useState('')
+  const [done, setDone] = useState(false)
+  return (
+    <div data-a11y="placeholder-as-label,error-not-described,error-no-live-region,success-unannounced">
+      <h3>Sign up, get 10% off</h3>
+      <p className="sub">One email a month. Field notes, restocks, nothing else.</p>
+      <div className="news">
+        <input value={email} placeholder="Email address" onChange={(e) => { setEmail(e.target.value); setErr('') }} />
+        <div className="cta" onClick={() => {
+          if (!email.includes('@')) { setErr('That does not look like an email address.'); return }
+          setDone(true); setErr('')
+        }}>Subscribe</div>
+      </div>
+      {err && <div className="err">{err}</div>}
+      {done && <div style={{ color: 'var(--accent)', fontSize: 13, marginTop: 7 }}>Thanks — check your inbox.</div>}
+    </div>
+  )
+}
+
+function App() {
+  const [cat, setCat] = useState('All')
+  const [items, setItems] = useState([])
+  const [openCart, setOpenCart] = useState(false)
+  const [toast, setToast] = useState('')
+  const shown = cat === 'All' ? PRODUCTS : PRODUCTS.filter((p) => p.cat === cat)
+  const count = items.reduce((s, i) => s + i.qty, 0)
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(''), 2500)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const add = (p) => {
+    setItems((cur) => cur.find((x) => x.id === p.id)
+      ? cur.map((x) => x.id === p.id ? { ...x, qty: x.qty + 1 } : x)
+      : [...cur, { ...p, qty: 1 }])
+    setToast(p.name + ' added to your bag')
+  }
+
+  return (
+    <div data-a11y="no-landmarks,no-skip-link,heading-order">
+      <div className="bar">Free shipping over $120 — ends Sunday</div>
+
+      <div className="top">
+        <div className="brand">FERNWEH</div>
+        <div className="menu">
+          <div>New in</div><div>Outerwear</div><div>Layers</div><div>Packs</div><div>Stories</div>
+        </div>
+        <div className="icons">
+          <button><svg width="19" height="19" viewBox="0 0 20 20"><circle cx="9" cy="9" r="6" fill="none" stroke="#14181d" strokeWidth="1.8"/><path d="M13.5 13.5L18 18" stroke="#14181d" strokeWidth="1.8"/></svg></button>
+          <button><svg width="19" height="19" viewBox="0 0 20 20"><circle cx="10" cy="6" r="3.2" fill="none" stroke="#14181d" strokeWidth="1.8"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" fill="none" stroke="#14181d" strokeWidth="1.8"/></svg></button>
+          <button onClick={() => setOpenCart(true)}>
+            <svg width="19" height="19" viewBox="0 0 20 20"><path d="M4 6h12l-1 10H5L4 6z" fill="none" stroke="#14181d" strokeWidth="1.8"/><path d="M7.5 6a2.5 2.5 0 015 0" fill="none" stroke="#14181d" strokeWidth="1.8"/></svg>
+          </button>
+          {count > 0 && <span className="badge">{count}</span>}
+        </div>
+      </div>
+
+      <Hero />
+
+      <div className="section">
+        <h3>This season</h3>
+        <p className="sub">{shown.length} products</p>
+        <Filters cat={cat} setCat={setCat} />
+        <div className="grid">
+          {shown.map((p) => <Card key={p.id} p={p} onAdd={add} />)}
+        </div>
+      </div>
+
+      <div className="split">
+        <div style={{ height: 340, background: 'linear-gradient(140deg,#4a5a4f,#8a9a8d)' }} />
+        <div className="pad">
+          <h5 style={{ fontSize: 24, margin: '0 0 6px', letterSpacing: '-.5px' }}>Repaired, not replaced</h5>
+          <p style={{ color: 'var(--muted)', fontSize: 14 }}>
+            Every Fernweh piece comes with a free repair for as long as you own it. Send it in, we patch it, you keep wearing it.
+          </p>
+          <a href="#/stories" style={{ color: 'var(--accent)', fontSize: 14 }}>Read more</a>
+        </div>
+      </div>
+
+      <div className="section"><Newsletter /></div>
+
+      <div className="foot">
+        <div>
+          <strong>Shop</strong>
+          <a href="#/new">New in</a><a href="#/outerwear">Outerwear</a><a href="#/packs">Packs</a>
+        </div>
+        <div>
+          <strong>Help</strong>
+          <a href="#/shipping">Shipping</a><a href="#/returns">Returns</a><a href="#/size">Size guide</a>
+        </div>
+        <div>
+          <strong>About</strong>
+          <a href="#/story">Our story</a><a href="#/repairs">Repairs</a><a href="#/jobs">Jobs</a>
+        </div>
+        <div>
+          <strong>Follow</strong>
+          <div className="social" data-a11y="link-no-name">
+            <a href="#/ig"><svg width="17" height="17" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="4" fill="none" stroke="#9aa3ad" strokeWidth="1.6"/><circle cx="10" cy="10" r="3.4" fill="none" stroke="#9aa3ad" strokeWidth="1.6"/></svg></a>
+            <a href="#/yt"><svg width="17" height="17" viewBox="0 0 20 20"><rect x="2" y="5" width="16" height="10" rx="3" fill="none" stroke="#9aa3ad" strokeWidth="1.6"/><path d="M9 8l4 2-4 2V8z" fill="#9aa3ad"/></svg></a>
+          </div>
+          <p style={{ fontSize: 12, marginTop: 16, color: '#6b737b' }}>© 2026 Fernweh Supply Co.</p>
+        </div>
+      </div>
+
+      {openCart && <CartDrawer items={items} setItems={setItems} onClose={() => setOpenCart(false)} />}
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+  )
+}
+
+// Findings a checker is expected to report on this page, collected per area.
+window.__A11Y_EXPECTED__ = {
+  page: ['landmark-missing', 'skip-link-missing', 'heading-order', 'html-lang-ok'],
+  header: ['button-name', 'nav-div-menu', 'keyboard-operable', 'cart-count-unannounced'],
+  hero: ['carousel-no-pause', 'carousel-unannounced', 'dot-no-name', 'keyboard-operable', 'heading-in-moving-region'],
+  filters: ['filter-color-only', 'aria-pressed-missing', 'results-unannounced', 'keyboard-operable'],
+  productCard: ['card-div-onclick', 'nested-interactive', 'swatch-no-name', 'rating-not-exposed', 'price-context', 'keyboard-operable'],
+  cart: ['drawer-no-dialog', 'no-focus-trap', 'no-focus-restore', 'no-esc', 'qty-buttons-no-name', 'remove-no-name', 'total-unannounced'],
+  toast: ['aria-live-missing'],
+  newsletter: ['label-missing', 'aria-invalid-missing', 'aria-describedby-missing', 'error-no-live-region', 'success-unannounced'],
+  editorial: ['link-text-ambiguous', 'heading-order', 'color-contrast'],
+  footer: ['link-no-name', 'color-contrast'],
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+</script>
+</body>
+</html>

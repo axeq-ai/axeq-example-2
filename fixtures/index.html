@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>React A11y Fixtures</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 0; color: #1a1a1a; }
+  .wrap { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+  nav { background: #f4f4f5; padding: 16px; border-right: 1px solid #ddd; }
+  nav a { display: block; padding: 6px 8px; color: #1a1a1a; text-decoration: none; font-size: 13px; border-radius: 4px; }
+  nav a.active { background: #1a1a1a; color: #fff; }
+  main { padding: 24px 32px; max-width: 760px; }
+  .meta { background: #fffbe6; border: 1px solid #e8d98a; padding: 12px; margin: 16px 0 24px; font-size: 13px; }
+  .meta code { background: #f0e9c8; padding: 1px 4px; }
+  .demo { border: 1px dashed #bbb; padding: 20px; }
+  .fake-btn { background: #2563eb; color: #fff; padding: 8px 14px; display: inline-block; cursor: pointer; border-radius: 4px; }
+  .low-contrast { color: #9aa3ad; background: #fff; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; }
+  .sheet { background: #fff; padding: 24px; border-radius: 8px; min-width: 320px; }
+  .drop { border: 1px solid #ccc; width: 220px; }
+  .drop-opt { padding: 6px 10px; cursor: pointer; }
+  .drop-opt:hover { background: #eee; }
+  .tabstrip { display: flex; gap: 4px; border-bottom: 2px solid #ddd; }
+  .tab { padding: 8px 14px; cursor: pointer; }
+  .tab.on { border-bottom: 2px solid #2563eb; margin-bottom: -2px; }
+  .toast { position: fixed; bottom: 20px; right: 20px; background: #111; color: #fff; padding: 12px 16px; border-radius: 6px; }
+  ul.plain { list-style: none; padding: 0; }
+  ul.plain li { padding: 6px; border-bottom: 1px solid #eee; display: flex; gap: 8px; align-items: center; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<div id="portal-layer"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect, Fragment } = React
+
+/* --- 01: click handler on a div, no role, no tabindex, no key handler --- */
+function DivButton() {
+  const [n, setN] = useState(0)
+  return (
+    <div className="demo">
+      <div className="fake-btn" onClick={() => setN(n + 1)}>Add to cart</div>
+      <p>Clicked {n} times. Keyboard users cannot reach or activate this.</p>
+    </div>
+  )
+}
+
+/* --- 02: modal with no focus trap and no focus restore --- */
+function ModalNoTrap() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="demo">
+      <button onClick={() => setOpen(true)}>Open dialog</button>
+      <p>Background content stays reachable by Tab while the dialog is open.</p>
+      <a href="#/modal-no-trap">A background link you can still tab to</a>
+      {open && (
+        <div className="overlay" onClick={() => setOpen(false)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <h2>Confirm order</h2>
+            <p>Focus never moved here. Escape does nothing.</p>
+            <button onClick={() => setOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* --- 03: portal dialog missing role/aria-modal, rest of page not hidden --- */
+function PortalNoDialogRole() {
+  const [open, setOpen] = useState(false)
+  const layer = document.getElementById('portal-layer')
+  return (
+    <div className="demo">
+      <button onClick={() => setOpen(true)}>Open portal sheet</button>
+      {open && layer && ReactDOM.createPortal(
+        <div className="overlay">
+          <div className="sheet">
+            <span style={{ fontSize: 20, fontWeight: 700 }}>Shipping options</span>
+            <p>Rendered in a portal as a plain div. No role="dialog", no aria-modal, no aria-label.</p>
+            <button onClick={() => setOpen(false)}>Close</button>
+          </div>
+        </div>,
+        layer
+      )}
+    </div>
+  )
+}
+
+/* --- 04: client-side route change with no announcement and no focus move --- */
+function RouteNoAnnounce() {
+  const [view, setView] = useState('list')
+  return (
+    <div className="demo">
+      <button onClick={() => setView(view === 'list' ? 'detail' : 'list')}>
+        Go to {view === 'list' ? 'detail' : 'list'}
+      </button>
+      {view === 'list'
+        ? <div><h2>Product list</h2><p>Swapping views changes nothing for a screen reader.</p></div>
+        : <div><h2>Product detail</h2><p>No live region, no focus reset, no title update.</p></div>}
+    </div>
+  )
+}
+
+/* --- 05: validation error rendered conditionally with no live region --- */
+function ErrorNoLiveRegion() {
+  const [value, setValue] = useState('')
+  const [err, setErr] = useState('')
+  return (
+    <form className="demo" onSubmit={(e) => {
+      e.preventDefault()
+      setErr(value.includes('@') ? '' : 'Enter a valid email address')
+    }}>
+      <label htmlFor="f05">Email</label><br />
+      <input id="f05" value={value} onChange={(e) => setValue(e.target.value)} />
+      <button type="submit">Submit</button>
+      {err && <p style={{ color: '#c00' }}>{err}</p>}
+    </form>
+  )
+}
+
+/* --- 06: aria-invalid and aria-describedby never wired to the error text --- */
+function FieldNotDescribed() {
+  const [err, setErr] = useState('Password is too short')
+  return (
+    <form className="demo" onSubmit={(e) => { e.preventDefault(); setErr('Password is too short') }}>
+      <label htmlFor="f06">Password</label><br />
+      <input id="f06" type="password" />
+      <p style={{ color: '#c00' }}>{err}</p>
+      <button type="submit">Save</button>
+    </form>
+  )
+}
+
+/* --- 07: array index as key, focus and state jump when the list reorders --- */
+function IndexKeyFocusLoss() {
+  const [items, setItems] = useState(['Alice', 'Bob', 'Cleo'])
+  return (
+    <div className="demo">
+      <button onClick={() => setItems([...items].reverse())}>Reverse list</button>
+      <ul className="plain">
+        {items.map((name, i) => (
+          <li key={i}>
+            <input defaultValue={name} aria-label={'Name ' + (i + 1)} />
+          </li>
+        ))}
+      </ul>
+      <p>Type in a field, then reverse: the DOM nodes are reused, focus and text stay behind.</p>
+    </div>
+  )
+}
+
+/* --- 08: autoFocus stealing focus on mount, deep in the page --- */
+function AutoFocusSteal() {
+  return (
+    <div className="demo">
+      <p>Scroll position and focus are yanked to the field below on every mount.</p>
+      <div style={{ height: 300 }} />
+      <input autoFocus placeholder="Search" />
+    </div>
+  )
+}
+
+/* --- 09: placeholder used instead of a label --- */
+function PlaceholderAsLabel() {
+  const [v, setV] = useState('')
+  return (
+    <form className="demo">
+      <input placeholder="Full name" value={v} onChange={(e) => setV(e.target.value)} />
+      <input placeholder="Postcode" />
+      <button type="submit">Continue</button>
+    </form>
+  )
+}
+
+/* --- 10: div-soup custom select, no combobox semantics --- */
+function FakeSelect() {
+  const [open, setOpen] = useState(false)
+  const [val, setVal] = useState('Choose a size')
+  return (
+    <div className="demo">
+      <div className="drop">
+        <div className="drop-opt" onClick={() => setOpen(!open)}>{val} ▾</div>
+        {open && ['S', 'M', 'L'].map((s) => (
+          <div key={s} className="drop-opt" onClick={() => { setVal(s); setOpen(false) }}>{s}</div>
+        ))}
+      </div>
+      <p>No role, no aria-expanded, no aria-activedescendant, no arrow-key handling.</p>
+    </div>
+  )
+}
+
+/* --- 11: tabs without tablist semantics or arrow-key navigation --- */
+function FakeTabs() {
+  const [tab, setTab] = useState(0)
+  const labels = ['Description', 'Parameters', 'Reviews']
+  return (
+    <div className="demo">
+      <div className="tabstrip">
+        {labels.map((l, i) => (
+          <div key={l} className={'tab' + (i === tab ? ' on' : '')} onClick={() => setTab(i)}>{l}</div>
+        ))}
+      </div>
+      <div style={{ paddingTop: 12 }}>Panel content for {labels[tab]}</div>
+    </div>
+  )
+}
+
+/* --- 12: accordion toggling with no aria-expanded or aria-controls --- */
+function FakeAccordion() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="demo">
+      <div className="fake-btn" onClick={() => setOpen(!open)}>Delivery and returns</div>
+      {open && <p>Panel is revealed with no programmatic relationship to its trigger.</p>}
+    </div>
+  )
+}
+
+/* --- 13: toast rendered with no role="status" --- */
+function ToastNoStatus() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    if (!show) return
+    const t = setTimeout(() => setShow(false), 3000)
+    return () => clearTimeout(t)
+  }, [show])
+  return (
+    <div className="demo">
+      <button onClick={() => setShow(true)}>Save settings</button>
+      {show && <div className="toast">Settings saved</div>}
+    </div>
+  )
+}
+
+/* --- 14: spinner with no aria-busy and no status text --- */
+function SpinnerNoStatus() {
+  const [loading, setLoading] = useState(false)
+  const [rows, setRows] = useState([])
+  return (
+    <div className="demo">
+      <button onClick={() => {
+        setLoading(true)
+        setTimeout(() => { setRows(['Order 1', 'Order 2']); setLoading(false) }, 1500)
+      }}>Load orders</button>
+      {loading ? <div style={{ padding: 20 }}>◌</div> : <ul>{rows.map((r) => <li key={r}>{r}</li>)}</ul>}
+    </div>
+  )
+}
+
+/* --- 15: icon-only buttons rendering an inline SVG with no accessible name --- */
+function IconButtonNoName() {
+  return (
+    <div className="demo">
+      <button><svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 4l12 12M16 4L4 16" stroke="#000" strokeWidth="2" /></svg></button>
+      <button><svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#000" strokeWidth="2" /></svg></button>
+      <p>Two controls, zero accessible names.</p>
+    </div>
+  )
+}
+
+/* --- 16: "load more" appends rows with no announcement of what arrived --- */
+function LoadMoreSilent() {
+  const [count, setCount] = useState(3)
+  return (
+    <div className="demo">
+      <ul>{Array.from({ length: count }, (_, i) => <li key={i}>Result {i + 1}</li>)}</ul>
+      <button onClick={() => setCount(count + 3)}>Load more</button>
+    </div>
+  )
+}
+
+/* --- 17: dangerouslySetInnerHTML dropping in broken markup from a CMS --- */
+function DangerousMarkup() {
+  const html = '<h4>Care instructions</h4><p>Wash at 30&deg;C.</p><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="40" height="40"><div onclick="void 0" style="color:#9aa3ad">Tap for more</div>'
+  return <div className="demo" dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+/* --- 18: nested interactive elements produced by composition --- */
+function NestedInteractive() {
+  return (
+    <div className="demo">
+      <a href="#/nested-interactive" style={{ display: 'inline-block', padding: 12, border: '1px solid #ccc' }}>
+        Wool blanket
+        <button onClick={(e) => e.preventDefault()}>Add to cart</button>
+      </a>
+    </div>
+  )
+}
+
+/* --- 19: heading levels chosen by a styling prop, order skips --- */
+function HeadingOrderByProp() {
+  const Heading = ({ size, children }) => React.createElement('h' + size, null, children)
+  return (
+    <div className="demo">
+      <Heading size={2}>Autumn collection</Heading>
+      <Heading size={5}>Jackets</Heading>
+      <Heading size={3}>Size guide</Heading>
+      <Heading size={6}>Returns</Heading>
+    </div>
+  )
+}
+
+/* --- 20: state-only visual feedback, colour is the sole indicator --- */
+function ColorOnlyState() {
+  const [sel, setSel] = useState('M')
+  return (
+    <div className="demo">
+      {['S', 'M', 'L'].map((s) => (
+        <div key={s} className="fake-btn"
+          style={{ background: s === sel ? '#2563eb' : '#e5e7eb', color: s === sel ? '#fff' : '#111', marginRight: 6 }}
+          onClick={() => setSel(s)}>{s}</div>
+      ))}
+      <p className="low-contrast">Selected size is communicated by background colour only.</p>
+    </div>
+  )
+}
+
+/* --- 21: unmounted trigger leaves focus on document.body --- */
+function FocusLostOnUnmount() {
+  const [items, setItems] = useState(['Beanie', 'Scarf', 'Mittens'])
+  return (
+    <div className="demo">
+      <ul className="plain">
+        {items.map((it) => (
+          <li key={it}>
+            {it}
+            <button onClick={() => setItems(items.filter((x) => x !== it))}>Remove {it}</button>
+          </li>
+        ))}
+      </ul>
+      <p>Remove a row with the keyboard: focus falls to body, position is lost, nothing is announced.</p>
+    </div>
+  )
+}
+
+/* --- 22: skip link and landmarks absent, nav repeated on every view --- */
+function NoLandmarks() {
+  return (
+    <div className="demo">
+      <div>
+        <div>Home</div><div>Shop</div><div>Journal</div><div>Contact</div>
+      </div>
+      <div><h2>Journal</h2><p>No header, nav, main or footer element anywhere in this tree.</p></div>
+    </div>
+  )
+}
+
+const CASES = [
+  { id: 'div-button', title: 'onClick on a div', react: 'Handler attached to a non-interactive element', expected: ['button-name', 'keyboard-operable', 'role-missing'], Component: DivButton },
+  { id: 'modal-no-trap', title: 'Modal without focus trap', react: 'Conditional render, no focus management on mount/unmount', expected: ['focus-trap', 'focus-restore', 'esc-to-close'], Component: ModalNoTrap },
+  { id: 'portal-no-dialog-role', title: 'Portal without dialog semantics', react: 'createPortal target outside the app root', expected: ['dialog-role', 'aria-modal', 'accessible-name'], Component: PortalNoDialogRole },
+  { id: 'route-no-announce', title: 'Route change not announced', react: 'Client-side view swap, no document title or live region', expected: ['route-announcement', 'focus-on-navigation', 'document-title'], Component: RouteNoAnnounce },
+  { id: 'error-no-live-region', title: 'Error appears with no live region', react: 'Conditional && render of validation text', expected: ['aria-live-missing'], Component: ErrorNoLiveRegion },
+  { id: 'field-not-described', title: 'Error not linked to its field', react: 'Error state held in component, never wired to the input', expected: ['aria-invalid-missing', 'aria-describedby-missing'], Component: FieldNotDescribed },
+  { id: 'index-key-focus-loss', title: 'Array index as key', react: 'Reconciliation reuses DOM nodes, focus and value desync', expected: ['focus-loss-on-reorder', 'index-key'], Component: IndexKeyFocusLoss },
+  { id: 'autofocus-steal', title: 'autoFocus on mount', react: 'autoFocus prop deep in the tree', expected: ['unexpected-focus-change'], Component: AutoFocusSteal },
+  { id: 'placeholder-as-label', title: 'Placeholder used as label', react: 'Controlled inputs with no associated label', expected: ['label-missing'], Component: PlaceholderAsLabel },
+  { id: 'fake-select', title: 'div-soup custom select', react: 'Stateful dropdown built from divs', expected: ['combobox-role', 'aria-expanded', 'keyboard-operable'], Component: FakeSelect },
+  { id: 'fake-tabs', title: 'Tabs without tab semantics', react: 'Active index in state, no ARIA mirror', expected: ['tablist-role', 'aria-selected', 'arrow-key-nav'], Component: FakeTabs },
+  { id: 'fake-accordion', title: 'Accordion without aria-expanded', react: 'Boolean state drives render only', expected: ['aria-expanded', 'aria-controls', 'keyboard-operable'], Component: FakeAccordion },
+  { id: 'toast-no-status', title: 'Toast with no role="status"', react: 'Timed conditional render', expected: ['aria-live-missing'], Component: ToastNoStatus },
+  { id: 'spinner-no-status', title: 'Loading state not announced', react: 'Ternary between spinner and data', expected: ['aria-busy-missing', 'aria-live-missing'], Component: SpinnerNoStatus },
+  { id: 'icon-button-no-name', title: 'Icon-only buttons', react: 'Inline SVG child, no label prop', expected: ['button-name', 'svg-title-missing'], Component: IconButtonNoName },
+  { id: 'load-more-silent', title: 'Load more appends silently', react: 'State growth with no announcement', expected: ['aria-live-missing', 'focus-on-new-content'], Component: LoadMoreSilent },
+  { id: 'dangerous-markup', title: 'dangerouslySetInnerHTML', react: 'Unaudited CMS HTML bypasses JSX', expected: ['image-alt', 'heading-order', 'color-contrast', 'keyboard-operable'], Component: DangerousMarkup },
+  { id: 'nested-interactive', title: 'Button inside a link', react: 'Composition nests two interactive elements', expected: ['nested-interactive'], Component: NestedInteractive },
+  { id: 'heading-order-by-prop', title: 'Heading level as a style prop', react: 'Dynamic h{n} chosen for looks', expected: ['heading-order'], Component: HeadingOrderByProp },
+  { id: 'color-only-state', title: 'Selection shown by colour only', react: 'Selected index styled, never exposed', expected: ['aria-pressed-missing', 'color-only-indicator', 'color-contrast'], Component: ColorOnlyState },
+  { id: 'focus-lost-on-unmount', title: 'Focus lost when a row unmounts', react: 'Filtering state removes the focused node', expected: ['focus-restore', 'aria-live-missing'], Component: FocusLostOnUnmount },
+  { id: 'no-landmarks', title: 'No landmarks or skip link', react: 'Everything rendered as div', expected: ['landmark-missing', 'skip-link-missing'], Component: NoLandmarks },
+]
+
+// Ground truth for the checker to assert against.
+window.__A11Y_FIXTURES__ = CASES.map(({ id, title, react, expected }) => ({ id, title, react, expected }))
+
+function useHash() {
+  const [hash, setHash] = useState(window.location.hash.slice(2) || CASES[0].id)
+  useEffect(() => {
+    const on = () => setHash(window.location.hash.slice(2) || CASES[0].id)
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
+  }, [])
+  return hash
+}
+
+function App() {
+  const hash = useHash()
+  const current = CASES.find((c) => c.id === hash) || CASES[0]
+  const Current = current.Component
+  return (
+    <div className="wrap">
+      <nav>
+        <strong style={{ fontSize: 13 }}>React a11y fixtures</strong>
+        <div style={{ height: 8 }} />
+        {CASES.map((c, i) => (
+          <a key={c.id} href={'#/' + c.id} className={c.id === current.id ? 'active' : ''}>
+            {String(i + 1).padStart(2, '0')} · {c.title}
+          </a>
+        ))}
+      </nav>
+      <main>
+        <h1>{current.title}</h1>
+        <div className="meta">
+          <div><strong>React cause:</strong> {current.react}</div>
+          <div style={{ marginTop: 6 }}>
+            <strong>Expected findings:</strong> {current.expected.map((e) => <code key={e} style={{ marginRight: 6 }}>{e}</code>)}
+          </div>
+          <div style={{ marginTop: 6 }}><strong>Route:</strong> <code>#/{current.id}</code></div>
+        </div>
+        <Current key={current.id} />
+      </main>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+</script>
+</body>
+</html>
