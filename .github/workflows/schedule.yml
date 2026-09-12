@@ -1,0 +1,21 @@
+name: Schedule axeq run
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1-5'
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch axeq run
+        env:
+          GH_TOKEN: ${{ secrets.AXEQ_DISPATCH_TOKEN }}
+        run: |
+          gh workflow run run.yaml \
+            --repo axeq-ai/axeq \
+            --ref master \
+            -f repository-owner="${{ github.repository_owner }}" \
+            -f repository-name="${{ github.event.repository.name }}" \
+            -f trigger-type=schedule
